@@ -41,14 +41,14 @@ return [
     | swallowed try/catch. On a cold start the connection attempt itself is what
     | wakes the service, so it must never turn into an error.
     |
-    | 'database' is a list of connection names to ping (null = default
-    | connection). 'cache' toggles a single cache read.
+    | Both are lists of connection names to touch (null = default connection).
+    | 'database' runs `select 1`; 'redis' runs a PING. Set either to [] to skip.
     |
     */
 
     'warm' => [
         'database' => [null],
-        'cache' => true,
+        'redis' => [null],
     ],
 
 ];

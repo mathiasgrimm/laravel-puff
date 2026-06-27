@@ -3,8 +3,8 @@
 namespace MathiasGrimm\Puff\Http\Controllers;
 
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 
 class PuffController
 {
@@ -29,11 +29,14 @@ class PuffController
             }
         }
 
-        if (config('puff.warm.cache', true)) {
+        /** @var list<string|null> $redisConnections */
+        $redisConnections = (array) config('puff.warm.redis', [null]);
+
+        foreach ($redisConnections as $connection) {
             try {
-                Cache::get('puff');
+                Redis::connection($connection)->command('ping');
             } catch (\Throwable) {
-                // Cold start. The attempt itself wakes the cache store.
+                // Cold start. The attempt itself wakes Redis.
             }
         }
 

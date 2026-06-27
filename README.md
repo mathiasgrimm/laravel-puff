@@ -7,13 +7,13 @@ backing services spin down when idle, so the first real request after a quiet
 period eats a cold-start penalty. **laravel-puff** fixes that: when a visitor
 shows *intent* to act (moving the mouse, typing, scrolling, touching the screen,
 or returning to the tab), the browser fires a lightweight, throttled `POST /puff`.
-The endpoint touches your database and cache to warm them *ahead of* the
+The endpoint touches your database and Redis to warm them *ahead of* the
 visitor's real request.
 
 Every activity signal funnels through the same throttle (one request per 30s by
 default), so coverage is broad but the request rate never climbs. It runs on
 every page, for every visitor. The endpoint is public by default (it only does a
-`select 1` and a cache read), so guests warm the stack ahead of logging in too.
+`select 1` and a Redis PING), so guests warm the stack ahead of logging in too.
 
 - Tiny, framework-agnostic JS core (no axios, no Wayfinder, no Inertia coupling).
 - Configurable endpoint, middleware, and warm targets.
@@ -88,8 +88,8 @@ return [
     'name'           => 'puff',        // route name
     'middleware'     => ['web'],       // public by default; add 'auth' to restrict
     'warm' => [
-        'database' => [null],          // connection names to `select 1` (null = default)
-        'cache'    => true,            // perform one Cache::get()
+        'database' => [null],          // DB connection names to `select 1` (null = default; [] to skip)
+        'redis'    => [null],          // Redis connection names to PING (null = default; [] to skip)
     ],
 ];
 ```

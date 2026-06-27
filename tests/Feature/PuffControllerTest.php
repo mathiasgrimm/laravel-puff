@@ -15,8 +15,9 @@ it('returns no content for an authenticated user', function () {
         ->assertNoContent();
 });
 
-it('still succeeds when a warm target throws', function () {
+it('still succeeds when warm targets are unreachable', function () {
     config()->set('puff.warm.database', ['does-not-exist']);
+    config()->set('puff.warm.redis', ['does-not-exist']);
 
     $this->postJson('/puff')->assertNoContent();
 });
