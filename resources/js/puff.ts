@@ -7,6 +7,13 @@ export type PuffOptions = {
     events?: string[];
     /** HTTP method. Defaults to `POST`. */
     method?: string;
+    /**
+     * Also warm when the user returns to this tab, i.e. when the page becomes
+     * visible again (the `visibilitychange` event). That is often when the stack
+     * is most likely to have scaled to zero, so warming then is a good moment.
+     * Set to `false` to listen to the `events` above only. Defaults to `true`.
+     */
+    warmOnVisible?: boolean;
     /** Return false to skip warming (e.g. for guests). Defaults to always-on. */
     isEnabled?: () => boolean;
 };
@@ -36,6 +43,7 @@ export function startPuff(options: PuffOptions = {}): () => void {
     const intervalMs = options.intervalMs ?? 30_000;
     const events = options.events ?? DEFAULT_EVENTS;
     const method = options.method ?? 'POST';
+    const warmOnVisible = options.warmOnVisible ?? true;
     const isEnabled = options.isEnabled ?? (() => true);
 
     let lastSentAt = 0;
@@ -80,13 +88,17 @@ export function startPuff(options: PuffOptions = {}): () => void {
         }
     };
 
-    document.addEventListener('visibilitychange', onVisibility);
+    if (warmOnVisible) {
+        document.addEventListener('visibilitychange', onVisibility);
+    }
 
     return (): void => {
         for (const event of events) {
             window.removeEventListener(event, send);
         }
 
-        document.removeEventListener('visibilitychange', onVisibility);
+        if (warmOnVisible) {
+            document.removeEventListener('visibilitychange', onVisibility);
+        }
     };
 }

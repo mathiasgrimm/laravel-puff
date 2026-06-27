@@ -107,13 +107,14 @@ it as the `X-XSRF-TOKEN` header, so no meta tag or extra setup is needed.
 
 `usePuff(options)` / `startPuff(options)` accept:
 
-| Option       | Default                                          | Description                                  |
-| ------------ | ------------------------------------------------ | -------------------------------------------- |
-| `url`        | `'/puff'`                                         | Endpoint to POST to                          |
-| `intervalMs` | `30000`                                           | Minimum gap between requests                 |
-| `events`     | `['mousemove','keydown','scroll','touchstart']`   | Activity events that trigger a warm          |
-| `method`     | `'POST'`                                           | HTTP method                                  |
-| `isEnabled`  | always-on                                          | Return `false` to skip (e.g. for guests)     |
+| Option          | Default                                          | Description                                                     |
+| --------------- | ------------------------------------------------ | -------------------------------------------------------------- |
+| `url`           | `'/puff'`                                         | Endpoint to POST to                                            |
+| `intervalMs`    | `30000`                                           | Minimum gap between requests                                  |
+| `events`        | `['mousemove','keydown','scroll','touchstart']`   | Activity events (on `window`) that trigger a warm             |
+| `method`        | `'POST'`                                           | HTTP method                                                   |
+| `warmOnVisible` | `true`                                            | Also warm when the user returns to the tab (`visibilitychange`) |
+| `isEnabled`     | always-on                                          | Return `false` to skip (e.g. for guests)                     |
 
 The framework-agnostic core (`resources/js/laravel-puff/puff.ts`) exports
 `startPuff(options): () => void` and returns a `stop()` cleanup, if you want to
