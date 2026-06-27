@@ -1,6 +1,6 @@
 {
     "name": "mathiasgrimm/laravel-puff",
-    "description": "Keep your scale-to-zero Laravel app warm — a tiny activity-driven keep-alive that pre-warms the stack so users don't hit cold starts.",
+    "description": "Keep your scale-to-zero Laravel app warm. A tiny activity-driven keep-alive that pre-warms the stack so users don't hit cold starts.",
     "keywords": [
         "laravel",
         "scale-to-zero",

@@ -1,6 +1,6 @@
 {
     "name": "@mathiasgrimm/laravel-puff",
-    "description": "Framework-agnostic keep-alive stubs for laravel-puff (dev tooling only — the stubs are published via composer).",
+    "description": "Framework-agnostic keep-alive stubs for laravel-puff (dev tooling only; the stubs are published via composer).",
     "private": true,
     "type": "module",
     "scripts": {

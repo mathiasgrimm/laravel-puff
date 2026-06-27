@@ -13,7 +13,7 @@ class PuffController
      *
      * Each backing-service touch is wrapped and swallowed: during a cold start
      * the service may still be spinning up, and the connection attempt itself
-     * is what triggers the platform to scale it — we must not turn that into a
+     * is what triggers the platform to scale it, so we must not turn that into a
      * 500.
      */
     public function __invoke(): Response
@@ -25,7 +25,7 @@ class PuffController
             try {
                 DB::connection($connection)->select('select 1');
             } catch (\Throwable) {
-                // Cold start — the attempt itself wakes the database.
+                // Cold start. The attempt itself wakes the database.
             }
         }
 
@@ -33,7 +33,7 @@ class PuffController
             try {
                 Cache::get('puff');
             } catch (\Throwable) {
-                // Cold start — the attempt itself wakes the cache store.
+                // Cold start. The attempt itself wakes the cache store.
             }
         }
 

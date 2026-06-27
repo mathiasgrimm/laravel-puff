@@ -33,8 +33,8 @@ class InstallCommand extends Command
 
         if ($stack !== 'vue') {
             $this->components->warn(
-                "The [{$stack}] stack is coming soon. Only [vue] is available right now — "
-                .'the framework-agnostic core ships today so other adapters are additive.'
+                "The [{$stack}] stack is coming soon. Only [vue] is available right now. "
+                .'The framework-agnostic core ships today so other adapters are additive.'
             );
 
             return self::SUCCESS;
@@ -60,7 +60,7 @@ class InstallCommand extends Command
     /**
      * Best-effort: drop a global `startPuff()` call into the app's JS entry file
      * (e.g. resources/js/app.ts) so the stack is warmed on every page, for every
-     * visitor. Never corrupts a file — if it can't find a safe spot, it prints
+     * visitor. Never corrupts a file: if it can't find a safe spot, it prints
      * manual instructions and moves on.
      */
     private function wireStartPuff(): void

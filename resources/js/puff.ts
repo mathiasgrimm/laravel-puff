@@ -23,8 +23,8 @@ function readCookie(name: string): string | null {
 /**
  * Warm a scale-to-zero stack ahead of user interaction.
  *
- * When the user shows intent to act — moving the mouse, typing, scrolling,
- * touching the screen, or returning to the tab — fire a fire-and-forget request
+ * When the user shows intent to act (moving the mouse, typing, scrolling,
+ * touching the screen, or returning to the tab), fire a fire-and-forget request
  * to the keep-alive endpoint, throttled to at most one request per `intervalMs`.
  * Every signal funnels through the same throttle, so adding signals widens
  * coverage without ever raising the request rate.
@@ -73,7 +73,7 @@ export function startPuff(options: PuffOptions = {}): () => void {
     }
 
     // Returning to the tab after being away is the moment the stack is most
-    // likely to have scaled to zero — warm it as soon as it becomes visible.
+    // likely to have scaled to zero, so warm it as soon as it becomes visible.
     const onVisibility = (): void => {
         if (document.visibilityState === 'visible') {
             send();
