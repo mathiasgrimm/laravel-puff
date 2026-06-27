@@ -4,15 +4,16 @@
 
 On a scale-to-zero stack (Laravel Cloud, serverless, autosleeping containers) the
 backing services spin down when idle, so the first real request after a quiet
-period eats a cold-start penalty. **laravel-puff** fixes that: when a logged-in
-user shows *intent* to act — moving the mouse, typing, scrolling, touching the
-screen, or returning to the tab — the browser fires a lightweight, throttled
-`POST /puff`. The endpoint touches your database and cache to warm them *ahead of*
-the user's real request.
+period eats a cold-start penalty. **laravel-puff** fixes that: when a visitor
+shows *intent* to act — moving the mouse, typing, scrolling, touching the screen,
+or returning to the tab — the browser fires a lightweight, throttled `POST /puff`.
+The endpoint touches your database and cache to warm them *ahead of* the
+visitor's real request.
 
 Every activity signal funnels through the same throttle (one request per 30s by
-default), so coverage is broad but the request rate never climbs. Guests do
-nothing.
+default), so coverage is broad but the request rate never climbs. It runs on
+every page, for every visitor — the endpoint is public by default (it only does a
+`select 1` and a cache read), so guests warm the stack ahead of logging in too.
 
 - Tiny, framework-agnostic JS core (no axios, no Wayfinder, no Inertia coupling).
 - Configurable endpoint, middleware, and warm targets.
@@ -31,32 +32,49 @@ composer require mathiasgrimm/laravel-puff
 php artisan puff:install
 ```
 
-`puff:install` publishes the config and the Vue keep-alive stub into
-`resources/js/laravel-puff/`. (Pass `--force` to overwrite, `--stack=vue` to be
-explicit. Other stacks are coming soon.)
+`puff:install` does two things:
 
-## Usage (Vue + Inertia)
+1. Publishes the config and the keep-alive JS (the framework-agnostic core +
+   a Vue composable) into `resources/js/laravel-puff/`.
+2. Wires a global `startPuff()` call into your JS entry (`resources/js/app.ts`),
+   so warming runs on every page out of the box.
 
-Call the composable once in your authenticated root layout's `<script setup>`:
-
-```ts
-import { usePuff } from '@/laravel-puff/usePuff';
-import { usePage } from '@inertiajs/vue3';
-
-// Only warm for authenticated users.
-usePuff({ isEnabled: () => !!usePage().props.auth?.user });
-```
+Flags: `--no-wire` to skip step 2, `--entry=path/to/app.ts` to target a different
+entry file, `--force` to overwrite published files, `--stack=vue` (default; other
+stacks coming soon).
 
 That's it. Move the mouse or switch back to the tab and you'll see a single
 `POST /puff` → `204`, throttled to at most one per 30 seconds.
 
-### Without Inertia
+### Wiring it yourself
 
-`isEnabled` is just a predicate — pass whatever tells you the user is logged in,
-or omit it to always warm:
+`startPuff()` is the framework-agnostic core (no Vue required). If you skipped
+`--no-wire`, add it to your entry manually:
 
 ```ts
-usePuff(); // always-on
+import { startPuff } from '@/laravel-puff/puff';
+
+startPuff();
+```
+
+### Vue composable (opt-in)
+
+Prefer per-component control with automatic cleanup on unmount? Use the Vue
+composable in a layout's `<script setup>` instead:
+
+```ts
+import { usePuff } from '@/laravel-puff/usePuff';
+
+usePuff();
+```
+
+Both accept the same options. To restrict warming — e.g. authenticated users
+only — pass an `isEnabled` predicate:
+
+```ts
+import { usePage } from '@inertiajs/vue3';
+
+startPuff({ isEnabled: () => !!usePage().props.auth?.user });
 ```
 
 ## Configuration
@@ -68,7 +86,7 @@ return [
     'register_route' => true,          // set false to define the route yourself
     'path'           => 'puff',        // POST /puff
     'name'           => 'puff',        // route name
-    'middleware'     => ['web', 'auth'],
+    'middleware'     => ['web'],       // public by default; add 'auth' to restrict
     'warm' => [
         'database' => [null],          // connection names to `select 1` (null = default)
         'cache'    => true,            // perform one Cache::get()

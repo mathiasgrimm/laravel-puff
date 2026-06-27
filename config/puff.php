@@ -18,7 +18,18 @@ return [
 
     'name' => 'puff',
 
-    'middleware' => ['web', 'auth'],
+    /*
+    |--------------------------------------------------------------------------
+    | Middleware
+    |--------------------------------------------------------------------------
+    |
+    | Public by default so the stack is warmed for everyone (guests included) —
+    | the endpoint only runs a `select 1` and a cache read, then returns 204.
+    | Add 'auth' here if you only want logged-in users to be able to warm it.
+    |
+    */
+
+    'middleware' => ['web'],
 
     /*
     |--------------------------------------------------------------------------
