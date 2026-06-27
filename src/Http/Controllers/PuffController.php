@@ -18,28 +18,38 @@ class PuffController
      */
     public function __invoke(): Response
     {
+        $this->warm('database', fn (?string $connection) => DB::connection($connection)->select('select 1'));
+
+        $this->warm('redis', fn (?string $connection) => Redis::connection($connection)->command('ping'));
+
+        return response()->noContent();
+    }
+
+    /**
+     * Touch every configured connection for a warmer, if it is enabled. An empty
+     * connection list falls back to the default connection (null).
+     *
+     * @param  callable(?string): mixed  $touch
+     */
+    private function warm(string $service, callable $touch): void
+    {
+        if (! config("puff.warm.{$service}.enabled", false)) {
+            return;
+        }
+
         /** @var list<string|null> $connections */
-        $connections = (array) config('puff.warm.database', [null]);
+        $connections = (array) config("puff.warm.{$service}.connections", []);
+
+        if ($connections === []) {
+            $connections = [null];
+        }
 
         foreach ($connections as $connection) {
             try {
-                DB::connection($connection)->select('select 1');
+                $touch($connection);
             } catch (\Throwable) {
-                // Cold start. The attempt itself wakes the database.
+                // Cold start. The attempt itself wakes the service.
             }
         }
-
-        /** @var list<string|null> $redisConnections */
-        $redisConnections = (array) config('puff.warm.redis', [null]);
-
-        foreach ($redisConnections as $connection) {
-            try {
-                Redis::connection($connection)->command('ping');
-            } catch (\Throwable) {
-                // Cold start. The attempt itself wakes Redis.
-            }
-        }
-
-        return response()->noContent();
     }
 }

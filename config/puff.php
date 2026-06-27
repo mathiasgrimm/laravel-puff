@@ -41,14 +41,22 @@ return [
     | swallowed try/catch. On a cold start the connection attempt itself is what
     | wakes the service, so it must never turn into an error.
     |
-    | Both are lists of connection names to touch (null = default connection).
-    | 'database' runs `select 1`; 'redis' runs a PING. Set either to [] to skip.
+    | Each warmer has an 'enabled' switch and a 'connections' list. 'database'
+    | runs `select 1` on every listed connection; 'redis' runs a PING. An empty
+    | 'connections' list falls back to the default connection. Both DB and Redis
+    | can have several connections, so list any you want to keep warm.
     |
     */
 
     'warm' => [
-        'database' => [null],
-        'redis' => [null],
+        'database' => [
+            'enabled' => true,
+            'connections' => [],
+        ],
+        'redis' => [
+            'enabled' => true,
+            'connections' => [],
+        ],
     ],
 
 ];

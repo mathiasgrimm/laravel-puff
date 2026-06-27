@@ -88,8 +88,14 @@ return [
     'name'           => 'puff',        // route name
     'middleware'     => ['web'],       // public by default; add 'auth' to restrict
     'warm' => [
-        'database' => [null],          // DB connection names to `select 1` (null = default; [] to skip)
-        'redis'    => [null],          // Redis connection names to PING (null = default; [] to skip)
+        'database' => [
+            'enabled'     => true,
+            'connections' => [],       // empty = default; or ['mysql', 'reports']
+        ],
+        'redis' => [
+            'enabled'     => true,
+            'connections' => [],       // empty = default; or ['default', 'cache']
+        ],
     ],
 ];
 ```
