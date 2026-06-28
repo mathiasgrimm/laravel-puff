@@ -13,7 +13,7 @@ class InstallCommand extends Command
      * @var string
      */
     protected $signature = 'puff:install
-        {--stack= : The frontend stack to install the keep-alive stub for (vue|react); auto-detected when omitted}
+        {--stack= : The frontend stack to install the warm-up stub for (vue|react); auto-detected when omitted}
         {--entry= : Path (relative to the app root) of the JS entry file to wire startPuff() into}
         {--no-wire : Publish the stub but do not modify the entry file}
         {--no-scripts : Do not add puff:publish to the app composer post-update-cmd}
@@ -22,7 +22,7 @@ class InstallCommand extends Command
     /**
      * @var string
      */
-    protected $description = 'Publish the Puff config and the frontend keep-alive stub';
+    protected $description = 'Publish the Puff config and the frontend warm-up stub';
 
     public function handle(): int
     {
@@ -66,7 +66,7 @@ class InstallCommand extends Command
             '--force' => $force,
         ]);
 
-        $this->components->info("Installing the [{$stack}] keep-alive stub.");
+        $this->components->info("Installing the [{$stack}] warm-up stub.");
 
         $this->call('vendor:publish', [
             '--tag' => self::STACK_TAGS[$stack],

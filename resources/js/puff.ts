@@ -32,7 +32,7 @@ function readCookie(name: string): string | null {
  *
  * When the user shows intent to act (moving the mouse, typing, scrolling,
  * touching the screen, or returning to the tab), fire a fire-and-forget request
- * to the keep-alive endpoint, throttled to at most one request per `intervalMs`.
+ * to the warm-up endpoint, throttled to at most one request per `intervalMs`.
  * Every signal funnels through the same throttle, so adding signals widens
  * coverage without ever raising the request rate.
  *

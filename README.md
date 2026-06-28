@@ -34,7 +34,7 @@ php artisan puff:install
 
 `puff:install` does three things:
 
-1. Publishes the config and the keep-alive JS (the framework-agnostic core +
+1. Publishes the config and the warm-up JS (the framework-agnostic core +
    a framework adapter) into `resources/js/laravel-puff/`.
 2. Wires a global `startPuff()` call into your JS entry (`resources/js/app.ts`
    or `resources/js/app.tsx`), so warming runs on every page out of the box.
