@@ -39,6 +39,12 @@ function readCookie(name: string): string | null {
  * Returns a `stop()` function that detaches every listener.
  */
 export function startPuff(options: PuffOptions = {}): () => void {
+    // No-op on the server (SSR / Inertia SSR). There is no user to warm for and
+    // no `window`/`document` to attach to, so bail out with a no-op stop().
+    if (typeof window === 'undefined') {
+        return (): void => {};
+    }
+
     const url = options.url ?? '/puff';
     const intervalMs = options.intervalMs ?? 30_000;
     const events = options.events ?? DEFAULT_EVENTS;
