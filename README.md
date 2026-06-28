@@ -15,7 +15,7 @@ genuine human activity, so an idle app still sleeps (and stops billing) the
 moment everyone leaves.
 
 - Tiny, framework-agnostic JS core (no axios, no Wayfinder, no Inertia coupling).
-- Throttled (one request per 30s by default), public by default, runs everywhere.
+- Throttled (one request per 60s by default), public by default, runs everywhere.
 - Ships Vue and React adapters today; Svelte and Livewire/Blade are additive.
 
 ## Requirements
@@ -51,7 +51,7 @@ Flags: `--no-wire` to skip step 2, `--no-scripts` to skip step 3,
 overwrite published files, `--stack=vue|react` to override auto-detection.
 
 That's it. Move the mouse or switch back to the tab and you'll see a single
-`POST /puff` → `204`, throttled to at most one per 30 seconds.
+`POST /puff` → `204`, throttled to at most one per 60 seconds.
 
 ### Keeping the stub up to date
 
@@ -158,7 +158,7 @@ it as the `X-XSRF-TOKEN` header, so no meta tag or extra setup is needed.
 | Option          | Default                                          | Description                                                     |
 | --------------- | ------------------------------------------------ | -------------------------------------------------------------- |
 | `url`           | `'/puff'`                                         | Endpoint to POST to                                            |
-| `intervalMs`    | `30000`                                           | Minimum gap between requests                                  |
+| `intervalSeconds` | `60`                                            | Minimum gap between requests, also measured from page load   |
 | `events`        | `['mousemove','keydown','scroll','touchstart']`   | Activity events (on `window`) that trigger a warm             |
 | `method`        | `'POST'`                                           | HTTP method                                                   |
 | `warmOnVisible` | `true`                                            | Also warm when the user returns to the tab (`visibilitychange`) |
@@ -167,6 +167,27 @@ it as the `X-XSRF-TOKEN` header, so no meta tag or extra setup is needed.
 The framework-agnostic core (`resources/js/laravel-puff/puff.ts`) exports
 `startPuff(options): () => void` and returns a `stop()` cleanup, if you want to
 wire it up yourself in another framework.
+
+### When the first puff fires
+
+Puff does **not** warm on page load. The page you just loaded was served by the
+app, so the stack is already warm, and firing then would be wasted. The throttle is
+seeded from load time, so the earliest a puff can go out is one `intervalSeconds`
+(60s by default) later, and only on genuine activity (mouse, keyboard, scroll,
+touch, or returning to the tab). That is by design: it covers the window where an
+idle stack may have scaled to zero, without spending a request while it is still
+warm.
+
+### Tuning `intervalSeconds` to your scale-to-zero setting
+
+The best value mirrors how long your environment stays up while idle. If Laravel
+Cloud is configured to sleep after 5 minutes of inactivity, a puff only needs to
+land inside that window to keep the stack warm for an active user, so an
+`intervalSeconds` around that idle timeout (e.g. `300` for 5 minutes) is a good
+fit: it warms often enough to stay ahead of a sleep, while keeping request volume
+to a minimum. Setting it much shorter than your idle timeout just adds requests
+without buying earlier coverage; setting it much longer risks the stack napping
+between puffs. When in doubt, match it to your scale-to-zero idle setting.
 
 ## Testing
 

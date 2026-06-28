@@ -1,8 +1,8 @@
 export type PuffOptions = {
     /** Endpoint to POST to. Defaults to `/puff`. */
     url?: string;
-    /** Minimum gap between requests, in milliseconds. Defaults to 30_000. */
-    intervalMs?: number;
+    /** Minimum gap between requests, in seconds. Defaults to 60. */
+    intervalSeconds?: number;
     /** Activity events that trigger a warm. */
     events?: string[];
     /** HTTP method. Defaults to `POST`. */
@@ -32,7 +32,7 @@ function readCookie(name: string): string | null {
  *
  * When the user shows intent to act (moving the mouse, typing, scrolling,
  * touching the screen, or returning to the tab), fire a fire-and-forget request
- * to the warm-up endpoint, throttled to at most one request per `intervalMs`.
+ * to the warm-up endpoint, throttled to at most one request per `intervalSeconds`.
  * Every signal funnels through the same throttle, so adding signals widens
  * coverage without ever raising the request rate.
  *
@@ -46,13 +46,18 @@ export function startPuff(options: PuffOptions = {}): () => void {
     }
 
     const url = options.url ?? '/puff';
-    const intervalMs = options.intervalMs ?? 30_000;
+    const intervalMs = (options.intervalSeconds ?? 60) * 1_000;
     const events = options.events ?? DEFAULT_EVENTS;
     const method = options.method ?? 'POST';
     const warmOnVisible = options.warmOnVisible ?? true;
     const isEnabled = options.isEnabled ?? (() => true);
 
-    let lastSentAt = 0;
+    // Seed the throttle with the current time rather than 0. The page that just
+    // loaded was served by the app, so the stack is warm right now: there is no
+    // point firing a puff on the first interaction immediately after load. Treat
+    // load as a fresh warm and only puff once `intervalSeconds` has elapsed, by
+    // which point the stack may actually have scaled down.
+    let lastSentAt = Date.now();
 
     const send = (): void => {
         if (!isEnabled()) {
