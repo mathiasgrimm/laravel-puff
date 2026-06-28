@@ -87,6 +87,7 @@ return [
     'path'           => 'puff',        // POST /puff
     'name'           => 'puff',        // route name
     'middleware'     => ['web'],       // public by default; add 'auth' to restrict
+    'throttle'       => '60,1',         // rate limit (maxAttempts,decayMinutes); null to disable
     'warm' => [
         'database' => [
             'enabled'     => true,

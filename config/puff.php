@@ -33,6 +33,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Throttle
+    |--------------------------------------------------------------------------
+    |
+    | The endpoint is public and touches your backing services on every hit, so
+    | a rate limit keeps it from being abused as a cheap way to hammer the DB and
+    | Redis. The value is Laravel's throttle string, "maxAttempts,decayMinutes",
+    | applied per client. Warming is best-effort and the browser ignores failed
+    | requests, so a throttled (429) warm is harmless. Set to null to disable.
+    |
+    */
+
+    'throttle' => '60,1',
+
+    /*
+    |--------------------------------------------------------------------------
     | Warmers
     |--------------------------------------------------------------------------
     |
