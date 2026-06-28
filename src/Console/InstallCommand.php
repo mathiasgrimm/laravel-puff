@@ -241,10 +241,11 @@ class InstallCommand extends Command
     }
 
     /**
-     * Insert an import line, kept sorted among the existing `@/` alias imports
-     * so it satisfies eslint import/order (which is what the starter kits use)
-     * instead of landing after the last import. Falls back to after the last
-     * import of any kind, then to the top of the file.
+     * Insert an import line where eslint import/order wants it (the rule the
+     * starter kits use). Preference order: sorted among the existing `@/` alias
+     * (internal) imports; else before the first relative import (the internal
+     * group sorts ahead of parent/sibling); else after the last import; else at
+     * the top of the file.
      */
     private function insertImport(string $content, string $import, string $module): string
     {
@@ -254,31 +255,54 @@ class InstallCommand extends Command
 
         $insertBefore = null;
         $insertAfterEnd = null;
+        $firstRelativeOffset = null;
 
         foreach ($all[0] as [$line, $offset]) {
-            if (preg_match('/from\s*[\'"](@\/[^\'"]+)[\'"]/', $line, $m) !== 1) {
+            if (preg_match('/from\s*[\'"]([^\'"]+)[\'"]/', $line, $m) !== 1) {
                 continue;
             }
 
-            // First alias import that sorts after ours: slot in right before it.
-            if (strcmp($m[1], $module) > 0) {
-                $insertBefore = $offset;
-                break;
+            $specifier = $m[1];
+
+            if (str_starts_with($specifier, '@/')) {
+                // First alias import that sorts after ours: slot in before it.
+                if (strcmp($specifier, $module) > 0) {
+                    $insertBefore = $offset;
+                    break;
+                }
+
+                // Otherwise remember the end of the alias block seen so far.
+                $insertAfterEnd = $offset + strlen($line);
+
+                continue;
             }
 
-            // Otherwise remember the end of the alias block seen so far.
-            $insertAfterEnd = $offset + strlen($line);
+            // Our `@/` import is in the "internal" group, which sorts before the
+            // "parent"/"sibling" groups, so note the first relative import as the
+            // boundary to use when there are no alias imports to sort among.
+            if ($firstRelativeOffset === null
+                && (str_starts_with($specifier, './') || str_starts_with($specifier, '../'))) {
+                $firstRelativeOffset = $offset;
+            }
         }
 
+        // Found an alias import that sorts after ours: slot in right before it.
         if ($insertBefore !== null) {
             return substr_replace($content, $import."\n", $insertBefore, 0);
         }
 
+        // Alias imports exist but ours sorts last: append after the alias block.
         if ($insertAfterEnd !== null) {
             return substr_replace($content, "\n".$import, $insertAfterEnd, 0);
         }
 
-        // No alias imports at all: fall back to after the last import.
+        // No alias imports: place ours before the first relative import (i.e.
+        // after the external/builtin imports) so import/order stays happy.
+        if ($firstRelativeOffset !== null) {
+            return substr_replace($content, $import."\n", $firstRelativeOffset, 0);
+        }
+
+        // Only external imports: fall back to after the last import.
         $last = end($all[0]);
 
         return substr_replace($content, "\n".$import, $last[1] + strlen($last[0]), 0);

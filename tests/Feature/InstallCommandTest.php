@@ -149,6 +149,28 @@ it('keeps the startPuff import sorted among @/ alias imports (eslint import/orde
         ->and($puff)->toBeLessThan($layout);
 });
 
+it('places the import before relative imports when there are no @/ aliases', function () {
+    file_put_contents(resource_path('js/app.tsx'), <<<'TS'
+        import { createInertiaApp } from '@inertiajs/react';
+        import { initializeTheme } from './hooks/use-appearance';
+
+        createInertiaApp({});
+        TS);
+
+    $this->artisan('puff:install', ['--stack' => 'react', '--force' => true])
+        ->assertSuccessful();
+
+    $content = file_get_contents(resource_path('js/app.tsx'));
+
+    // Internal (@/) import sorts after external and before the relative import.
+    $external = strpos($content, '@inertiajs/react');
+    $puff = strpos($content, '@/laravel-puff/puff');
+    $relative = strpos($content, './hooks/use-appearance');
+
+    expect($puff)->toBeGreaterThan($external)
+        ->and($puff)->toBeLessThan($relative);
+});
+
 it('does not wire startPuff twice', function () {
     file_put_contents(resource_path('js/app.ts'), <<<'TS'
         import { createInertiaApp } from '@inertiajs/vue3';
