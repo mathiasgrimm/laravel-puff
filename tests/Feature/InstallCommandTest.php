@@ -129,6 +129,15 @@ it('skips wiring when --no-wire is passed', function () {
     expect(file_get_contents(resource_path('js/app.ts')))->not->toContain('startPuff');
 });
 
+it('warns when files already exist and --force is not used', function () {
+    $this->artisan('puff:install', ['--stack' => 'vue', '--no-wire' => true, '--no-scripts' => true, '--force' => true])
+        ->assertSuccessful();
+
+    $this->artisan('puff:install', ['--stack' => 'vue', '--no-wire' => true, '--no-scripts' => true])
+        ->expectsOutputToContain('already exist')
+        ->assertSuccessful();
+});
+
 it('adds puff:publish to an existing post-update-cmd', function () {
     file_put_contents(
         base_path('composer.json'),

@@ -48,6 +48,19 @@ class InstallCommand extends Command
 
         $force = (bool) $this->option('force');
 
+        $existing = array_filter([
+            config_path('puff.php'),
+            resource_path('js/laravel-puff/puff.ts'),
+            resource_path('js/laravel-puff/usePuff.ts'),
+        ], 'is_file');
+
+        if ($existing !== [] && ! $force) {
+            $this->components->warn(
+                'Some Puff files already exist and were left untouched. '
+                .'Re-run with --force to overwrite them.'
+            );
+        }
+
         $this->call('vendor:publish', [
             '--tag' => 'puff-config',
             '--force' => $force,
