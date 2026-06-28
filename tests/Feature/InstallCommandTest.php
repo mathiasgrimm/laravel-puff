@@ -141,9 +141,9 @@ it('keeps the startPuff import sorted among @/ alias imports (eslint import/orde
     $content = file_get_contents(resource_path('js/app.tsx'));
 
     // Sorts after @/hooks and before @/layouts, not dumped after the last import.
-    $hooks = strpos($content, "@/hooks/use-appearance");
-    $puff = strpos($content, "@/laravel-puff/puff");
-    $layout = strpos($content, "@/layouts/app-layout");
+    $hooks = strpos($content, '@/hooks/use-appearance');
+    $puff = strpos($content, '@/laravel-puff/puff');
+    $layout = strpos($content, '@/layouts/app-layout');
 
     expect($puff)->toBeGreaterThan($hooks)
         ->and($puff)->toBeLessThan($layout);
