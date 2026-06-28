@@ -32,7 +32,7 @@ class PuffServiceProvider extends ServiceProvider
             // and imports are identical no matter which stack is installed.
             $this->publishes([
                 __DIR__.'/../resources/js/puff.ts' => resource_path('js/laravel-puff/puff.ts'),
-                __DIR__.'/../resources/js/usePuff.ts' => resource_path('js/laravel-puff/usePuff.ts'),
+                __DIR__.'/../resources/js/usePuff.vue.ts' => resource_path('js/laravel-puff/usePuff.ts'),
             ], 'puff-vue');
 
             $this->publishes([
