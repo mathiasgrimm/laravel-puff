@@ -1,5 +1,6 @@
 import { onMounted, onUnmounted } from 'vue';
-import { startPuff, type PuffOptions } from './puff';
+import { startPuff } from './puff';
+import type { PuffOptions } from './puff';
 
 /**
  * Vue adapter for Puff. Call once in your root/authenticated layout's
