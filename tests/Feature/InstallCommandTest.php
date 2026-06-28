@@ -22,6 +22,7 @@ afterEach(function () {
     @rmdir(resource_path('js/laravel-puff'));
     @unlink(resource_path('js/app.ts'));
     @unlink(resource_path('js/app.tsx'));
+    @unlink(base_path('package.json'));
 });
 
 it('publishes the config and the vue stub', function () {
@@ -86,6 +87,25 @@ it('auto-detects the react stack from a .tsx entry', function () {
         ->toContain("from 'react'")
         ->and(file_get_contents(resource_path('js/app.tsx')))
         ->toContain('startPuff();');
+});
+
+it('auto-detects vue from package.json when the entry is .ts', function () {
+    file_put_contents(resource_path('js/app.ts'), "createInertiaApp({});\n");
+    file_put_contents(base_path('package.json'), json_encode(['dependencies' => ['vue' => '^3.0']]));
+
+    $this->artisan('puff:install', ['--no-wire' => true, '--no-scripts' => true, '--force' => true])
+        ->assertSuccessful();
+
+    expect(file_get_contents(resource_path('js/laravel-puff/usePuff.ts')))->toContain("from 'vue'");
+});
+
+it('does not default to vue: fails on a .ts entry when package.json is inconclusive', function () {
+    file_put_contents(resource_path('js/app.ts'), "createInertiaApp({});\n");
+
+    $this->artisan('puff:install', ['--no-wire' => true, '--no-scripts' => true])
+        ->assertFailed();
+
+    expect(file_exists(resource_path('js/laravel-puff/usePuff.ts')))->toBeFalse();
 });
 
 it('wires startPuff into the js entry file', function () {

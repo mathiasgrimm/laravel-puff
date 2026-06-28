@@ -160,20 +160,17 @@ class InstallCommand extends Command
     }
 
     /**
-     * Sniff the app for its frontend stack. The entry file extension is the
-     * strongest signal (app.tsx/app.jsx => react, app.ts/app.js => vue), then
-     * package.json dependencies. Returns null when nothing is conclusive.
+     * Sniff the app for its frontend stack. A .tsx/.jsx entry is a definitive
+     * React signal; anything else is corroborated against package.json
+     * dependencies rather than assumed. Returns null when nothing is
+     * conclusive, so the caller fails loudly instead of guessing.
      */
     private function detectStack(): ?string
     {
         $entry = $this->resolveEntry();
 
-        if ($entry !== null) {
-            if (preg_match('/\.(tsx|jsx)$/', $entry) === 1) {
-                return 'react';
-            }
-
-            return 'vue';
+        if ($entry !== null && preg_match('/\.(tsx|jsx)$/', $entry) === 1) {
+            return 'react';
         }
 
         $packageJson = base_path('package.json');
