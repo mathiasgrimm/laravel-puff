@@ -16,7 +16,7 @@ moment everyone leaves.
 
 - Tiny, framework-agnostic JS core (no axios, no Wayfinder, no Inertia coupling).
 - Throttled (one request per 30s by default), public by default, runs everywhere.
-- Ships a Vue adapter today; React, Svelte, and Livewire/Blade are additive.
+- Ships Vue and React adapters today; Svelte and Livewire/Blade are additive.
 
 ## Requirements
 
