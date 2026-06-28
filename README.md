@@ -2,23 +2,21 @@
 
 > Keep your scale-to-zero Laravel app warm.
 
-On a scale-to-zero stack (Laravel Cloud, serverless, autosleeping containers) the
-backing services spin down when idle, so the first real request after a quiet
-period eats a cold-start penalty. **laravel-puff** fixes that: when a visitor
-shows *intent* to act (moving the mouse, typing, scrolling, touching the screen,
-or returning to the tab), the browser fires a lightweight, throttled `POST /puff`.
-The endpoint touches your database and Redis to warm them *ahead of* the
-visitor's real request.
+Laravel Cloud's scale-to-zero is spectacular: it parks your environment when idle
+and wakes it in ~500ms. **laravel-puff** makes it even better. When a visitor
+shows *intent* to act (moving the mouse, typing, scrolling, or returning to the
+tab), the browser fires a lightweight, throttled `POST /puff` that warms your
+database and Redis *ahead of* the real request, so the cold start is already paid
+for by the time they click.
 
-Every activity signal funnels through the same throttle (one request per 30s by
-default), so coverage is broad but the request rate never climbs. It runs on
-every page, for every visitor. The endpoint is public by default (it only does a
-`select 1` and a Redis PING), so guests warm the stack ahead of logging in too.
+It is **not** a poller. A heartbeat that pings on a timer would keep the
+environment awake forever and defeat scale-to-zero. laravel-puff only fires on
+genuine human activity, so an idle app still sleeps (and stops billing) the
+moment everyone leaves.
 
 - Tiny, framework-agnostic JS core (no axios, no Wayfinder, no Inertia coupling).
-- Configurable endpoint, middleware, and warm targets.
-- Ships a Vue adapter today; the core is framework-agnostic so React, Svelte, and
-  Livewire/Blade adapters are additive.
+- Throttled (one request per 30s by default), public by default, runs everywhere.
+- Ships a Vue adapter today; React, Svelte, and Livewire/Blade are additive.
 
 ## Requirements
 
