@@ -33,9 +33,16 @@ it('publishes the config and the react stub', function () {
         ->toContain("from 'react'");
 });
 
-it('does not publish a frontend stub for an unsupported stack', function () {
+it('fails for an unsupported stack', function () {
     $this->artisan('puff:install', ['--stack' => 'svelte'])
-        ->assertSuccessful();
+        ->assertFailed();
+
+    expect(file_exists(resource_path('js/laravel-puff/usePuff.ts')))->toBeFalse();
+});
+
+it('fails when the stack cannot be detected', function () {
+    $this->artisan('puff:install')
+        ->assertFailed();
 
     expect(file_exists(resource_path('js/laravel-puff/usePuff.ts')))->toBeFalse();
 });

@@ -33,25 +33,32 @@ class InstallCommand extends Command
 
     public function handle(): int
     {
+        $supported = implode(', ', array_keys(self::STACK_TAGS));
+        $stack = $this->resolveStack();
+
+        if ($stack === null) {
+            $this->components->error(
+                'Could not detect your frontend stack. Re-run with an explicit '
+                ."--stack option (supported: {$supported})."
+            );
+
+            return self::FAILURE;
+        }
+
+        if (! isset(self::STACK_TAGS[$stack])) {
+            $this->components->error(
+                "The [{$stack}] stack is not supported. Supported stacks: {$supported}."
+            );
+
+            return self::FAILURE;
+        }
+
         $force = (bool) $this->option('force');
 
         $this->call('vendor:publish', [
             '--tag' => 'puff-config',
             '--force' => $force,
         ]);
-
-        $stack = $this->resolveStack();
-
-        if (! isset(self::STACK_TAGS[$stack])) {
-            $supported = implode(', ', array_keys(self::STACK_TAGS));
-
-            $this->components->warn(
-                "The [{$stack}] stack is not supported. Supported stacks: {$supported}. "
-                .'The framework-agnostic core ships today so other adapters are additive.'
-            );
-
-            return self::SUCCESS;
-        }
 
         $this->components->info("Installing the [{$stack}] keep-alive stub.");
 
@@ -74,10 +81,11 @@ class InstallCommand extends Command
 
     /**
      * Resolve the stack to install: an explicit --stack always wins, otherwise
-     * auto-detect from the app so React Starter Kit users can just run
-     * `puff:install`. Falls back to `vue`.
+     * auto-detect from the app so the Vue/React starter kits just work. Returns
+     * null when the stack can't be determined, so the caller can fail loudly
+     * rather than guess.
      */
-    private function resolveStack(): string
+    private function resolveStack(): ?string
     {
         if ($override = $this->option('stack')) {
             return strtolower((string) $override);
@@ -88,15 +96,19 @@ class InstallCommand extends Command
 
     /**
      * Sniff the app for its frontend stack. The entry file extension is the
-     * strongest signal (app.tsx/app.jsx => react), then package.json
-     * dependencies. Defaults to `vue` when nothing is conclusive.
+     * strongest signal (app.tsx/app.jsx => react, app.ts/app.js => vue), then
+     * package.json dependencies. Returns null when nothing is conclusive.
      */
-    private function detectStack(): string
+    private function detectStack(): ?string
     {
         $entry = $this->resolveEntry();
 
-        if ($entry !== null && preg_match('/\.(tsx|jsx)$/', $entry) === 1) {
-            return 'react';
+        if ($entry !== null) {
+            if (preg_match('/\.(tsx|jsx)$/', $entry) === 1) {
+                return 'react';
+            }
+
+            return 'vue';
         }
 
         $packageJson = base_path('package.json');
@@ -109,12 +121,19 @@ class InstallCommand extends Command
                 (array) ($manifest['devDependencies'] ?? []),
             );
 
-            if (isset($deps['react']) && ! isset($deps['vue'])) {
+            $hasReact = isset($deps['react']);
+            $hasVue = isset($deps['vue']);
+
+            if ($hasReact && ! $hasVue) {
                 return 'react';
+            }
+
+            if ($hasVue && ! $hasReact) {
+                return 'vue';
             }
         }
 
-        return 'vue';
+        return null;
     }
 
     /**

@@ -41,7 +41,8 @@ php artisan puff:install
 
 The stack is auto-detected (Vue or React) from your entry file and
 `package.json`, so the Vue and React starter kits both work with a bare
-`php artisan puff:install`. Force one with `--stack=vue` or `--stack=react`.
+`php artisan puff:install`. If it can't tell, the command stops and asks you to
+pass `--stack=vue` or `--stack=react` rather than guessing.
 
 Flags: `--no-wire` to skip step 2, `--entry=path/to/app.tsx` to target a
 different entry file, `--force` to overwrite published files, `--stack=vue|react`
