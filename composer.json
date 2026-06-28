@@ -3,6 +3,7 @@
     "description": "On-demand warming for scale-to-zero Laravel apps - no cold start when it counts. A tiny activity-driven warmer that wakes the stack just before the user's request.",
     "keywords": [
         "laravel",
+        "laravel-cloud",
         "scale-to-zero",
         "cold-start",
         "warmup",
