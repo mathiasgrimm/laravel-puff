@@ -10,10 +10,21 @@ class InstallCommand extends Command
      * @var string
      */
     protected $signature = 'puff:install
-        {--stack=vue : The frontend stack to install the keep-alive stub for (vue)}
+        {--stack= : The frontend stack to install the keep-alive stub for (vue|react); auto-detected when omitted}
         {--entry= : Path (relative to the app root) of the JS entry file to wire startPuff() into}
         {--no-wire : Publish the stub but do not modify the entry file}
         {--force : Overwrite any existing published files}';
+
+    /**
+     * Supported frontend stacks mapped to the publish tag that ships their
+     * adapter (each tag publishes the shared core + that stack's usePuff).
+     *
+     * @var array<string, string>
+     */
+    private const STACK_TAGS = [
+        'vue' => 'puff-vue',
+        'react' => 'puff-react',
+    ];
 
     /**
      * @var string
@@ -29,19 +40,23 @@ class InstallCommand extends Command
             '--force' => $force,
         ]);
 
-        $stack = (string) $this->option('stack');
+        $stack = $this->resolveStack();
 
-        if ($stack !== 'vue') {
+        if (! isset(self::STACK_TAGS[$stack])) {
+            $supported = implode(', ', array_keys(self::STACK_TAGS));
+
             $this->components->warn(
-                "The [{$stack}] stack is coming soon. Only [vue] is available right now. "
+                "The [{$stack}] stack is not supported. Supported stacks: {$supported}. "
                 .'The framework-agnostic core ships today so other adapters are additive.'
             );
 
             return self::SUCCESS;
         }
 
+        $this->components->info("Installing the [{$stack}] keep-alive stub.");
+
         $this->call('vendor:publish', [
-            '--tag' => 'puff-vue',
+            '--tag' => self::STACK_TAGS[$stack],
             '--force' => $force,
         ]);
 
@@ -55,6 +70,51 @@ class InstallCommand extends Command
         );
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Resolve the stack to install: an explicit --stack always wins, otherwise
+     * auto-detect from the app so React Starter Kit users can just run
+     * `puff:install`. Falls back to `vue`.
+     */
+    private function resolveStack(): string
+    {
+        if ($override = $this->option('stack')) {
+            return strtolower((string) $override);
+        }
+
+        return $this->detectStack();
+    }
+
+    /**
+     * Sniff the app for its frontend stack. The entry file extension is the
+     * strongest signal (app.tsx/app.jsx => react), then package.json
+     * dependencies. Defaults to `vue` when nothing is conclusive.
+     */
+    private function detectStack(): string
+    {
+        $entry = $this->resolveEntry();
+
+        if ($entry !== null && preg_match('/\.(tsx|jsx)$/', $entry) === 1) {
+            return 'react';
+        }
+
+        $packageJson = base_path('package.json');
+
+        if (is_file($packageJson)) {
+            $manifest = json_decode((string) file_get_contents($packageJson), true);
+
+            $deps = array_merge(
+                (array) ($manifest['dependencies'] ?? []),
+                (array) ($manifest['devDependencies'] ?? []),
+            );
+
+            if (isset($deps['react']) && ! isset($deps['vue'])) {
+                return 'react';
+            }
+        }
+
+        return 'vue';
     }
 
     /**
@@ -117,7 +177,7 @@ class InstallCommand extends Command
             return is_file($path) ? $path : null;
         }
 
-        foreach (['js/app.ts', 'js/app.js'] as $candidate) {
+        foreach (['js/app.ts', 'js/app.tsx', 'js/app.js', 'js/app.jsx'] as $candidate) {
             $path = resource_path($candidate);
 
             if (is_file($path)) {

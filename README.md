@@ -35,13 +35,17 @@ php artisan puff:install
 `puff:install` does two things:
 
 1. Publishes the config and the keep-alive JS (the framework-agnostic core +
-   a Vue composable) into `resources/js/laravel-puff/`.
-2. Wires a global `startPuff()` call into your JS entry (`resources/js/app.ts`),
-   so warming runs on every page out of the box.
+   a framework adapter) into `resources/js/laravel-puff/`.
+2. Wires a global `startPuff()` call into your JS entry (`resources/js/app.ts`
+   or `resources/js/app.tsx`), so warming runs on every page out of the box.
 
-Flags: `--no-wire` to skip step 2, `--entry=path/to/app.ts` to target a different
-entry file, `--force` to overwrite published files, `--stack=vue` (default; other
-stacks coming soon).
+The stack is auto-detected (Vue or React) from your entry file and
+`package.json`, so the Vue and React starter kits both work with a bare
+`php artisan puff:install`. Force one with `--stack=vue` or `--stack=react`.
+
+Flags: `--no-wire` to skip step 2, `--entry=path/to/app.tsx` to target a
+different entry file, `--force` to overwrite published files, `--stack=vue|react`
+to override auto-detection.
 
 That's it. Move the mouse or switch back to the tab and you'll see a single
 `POST /puff` → `204`, throttled to at most one per 30 seconds.
@@ -68,13 +72,32 @@ import { usePuff } from '@/laravel-puff/usePuff';
 usePuff();
 ```
 
-Both accept the same options. To restrict warming (e.g. authenticated users
-only), pass an `isEnabled` predicate:
+### React hook (opt-in)
+
+On React (e.g. the React starter kit), the published `usePuff` is a hook that
+starts warming on mount and cleans up on unmount. Call it once in a layout:
+
+```tsx
+import { usePuff } from '@/laravel-puff/usePuff';
+
+usePuff();
+```
+
+Both adapters accept the same options. To restrict warming (e.g. authenticated
+users only), pass an `isEnabled` predicate:
 
 ```ts
+// Vue
 import { usePage } from '@inertiajs/vue3';
 
 startPuff({ isEnabled: () => !!usePage().props.auth?.user });
+```
+
+```tsx
+// React
+import { usePage } from '@inertiajs/react';
+
+usePuff({ isEnabled: () => !!usePage().props.auth?.user });
 ```
 
 ## Configuration
