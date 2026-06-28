@@ -3,9 +3,12 @@
 namespace MathiasGrimm\Puff\Console;
 
 use Illuminate\Console\Command;
+use MathiasGrimm\Puff\Console\Concerns\InteractsWithStacks;
 
 class InstallCommand extends Command
 {
+    use InteractsWithStacks;
+
     /**
      * @var string
      */
@@ -14,17 +17,6 @@ class InstallCommand extends Command
         {--entry= : Path (relative to the app root) of the JS entry file to wire startPuff() into}
         {--no-wire : Publish the stub but do not modify the entry file}
         {--force : Overwrite any existing published files}';
-
-    /**
-     * Supported frontend stacks mapped to the publish tag that ships their
-     * adapter (each tag publishes the shared core + that stack's usePuff).
-     *
-     * @var array<string, string>
-     */
-    private const STACK_TAGS = [
-        'vue' => 'puff-vue',
-        'react' => 'puff-react',
-    ];
 
     /**
      * @var string

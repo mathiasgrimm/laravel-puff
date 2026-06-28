@@ -51,6 +51,25 @@ to override auto-detection.
 That's it. Move the mouse or switch back to the tab and you'll see a single
 `POST /puff` → `204`, throttled to at most one per 30 seconds.
 
+### Keeping the stub up to date
+
+The published JS (`resources/js/laravel-puff/`) is a copy, so `composer update`
+alone won't refresh it. Treat that folder as package-owned (don't edit it) and,
+like Telescope/Horizon/Nova do for their assets, add `puff:publish` to your
+app's `composer.json` so every update re-syncs it with the installed version:
+
+```json
+"scripts": {
+    "post-update-cmd": [
+        "@php artisan puff:publish --ansi"
+    ]
+}
+```
+
+`puff:publish` force-republishes the core + the adapter for whichever stack you
+installed (it never touches `config/puff.php`, which stays yours). You can also
+run it by hand any time: `php artisan puff:publish`.
+
 ### Wiring it yourself
 
 `startPuff()` is the framework-agnostic core (no Vue required). If you skipped

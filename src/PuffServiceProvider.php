@@ -4,6 +4,7 @@ namespace MathiasGrimm\Puff;
 
 use Illuminate\Support\ServiceProvider;
 use MathiasGrimm\Puff\Console\InstallCommand;
+use MathiasGrimm\Puff\Console\PublishCommand;
 
 class PuffServiceProvider extends ServiceProvider
 {
@@ -19,7 +20,7 @@ class PuffServiceProvider extends ServiceProvider
         }
 
         if ($this->app->runningInConsole()) {
-            $this->commands([InstallCommand::class]);
+            $this->commands([InstallCommand::class, PublishCommand::class]);
 
             $this->publishes([
                 __DIR__.'/../config/puff.php' => config_path('puff.php'),
