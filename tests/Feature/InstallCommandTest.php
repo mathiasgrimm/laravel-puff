@@ -60,10 +60,11 @@ it('fails when the stack cannot be detected', function () {
 });
 
 it('wires startPuff into a react .tsx entry file', function () {
-    file_put_contents(
-        resource_path('js/app.tsx'),
-        "import { createInertiaApp } from '@inertiajs/react';\n\ncreateInertiaApp({});\n"
-    );
+    file_put_contents(resource_path('js/app.tsx'), <<<'TS'
+        import { createInertiaApp } from '@inertiajs/react';
+
+        createInertiaApp({});
+        TS);
 
     $this->artisan('puff:install', ['--stack' => 'react', '--force' => true])
         ->assertSuccessful();
@@ -75,10 +76,11 @@ it('wires startPuff into a react .tsx entry file', function () {
 });
 
 it('auto-detects the react stack from a .tsx entry', function () {
-    file_put_contents(
-        resource_path('js/app.tsx'),
-        "import { createInertiaApp } from '@inertiajs/react';\n\ncreateInertiaApp({});\n"
-    );
+    file_put_contents(resource_path('js/app.tsx'), <<<'TS'
+        import { createInertiaApp } from '@inertiajs/react';
+
+        createInertiaApp({});
+        TS);
 
     $this->artisan('puff:install', ['--force' => true])
         ->assertSuccessful();
@@ -109,10 +111,11 @@ it('does not default to vue: fails on a .ts entry when package.json is inconclus
 });
 
 it('wires startPuff into the js entry file', function () {
-    file_put_contents(
-        resource_path('js/app.ts'),
-        "import { createInertiaApp } from '@inertiajs/vue3';\n\ncreateInertiaApp({});\n"
-    );
+    file_put_contents(resource_path('js/app.ts'), <<<'TS'
+        import { createInertiaApp } from '@inertiajs/vue3';
+
+        createInertiaApp({});
+        TS);
 
     $this->artisan('puff:install', ['--stack' => 'vue', '--force' => true])
         ->assertSuccessful();
@@ -124,10 +127,11 @@ it('wires startPuff into the js entry file', function () {
 });
 
 it('does not wire startPuff twice', function () {
-    file_put_contents(
-        resource_path('js/app.ts'),
-        "import { createInertiaApp } from '@inertiajs/vue3';\n\ncreateInertiaApp({});\n"
-    );
+    file_put_contents(resource_path('js/app.ts'), <<<'TS'
+        import { createInertiaApp } from '@inertiajs/vue3';
+
+        createInertiaApp({});
+        TS);
 
     $this->artisan('puff:install', ['--stack' => 'vue', '--force' => true])->assertSuccessful();
     $this->artisan('puff:install', ['--stack' => 'vue', '--force' => true])->assertSuccessful();
@@ -138,10 +142,11 @@ it('does not wire startPuff twice', function () {
 });
 
 it('skips wiring when --no-wire is passed', function () {
-    file_put_contents(
-        resource_path('js/app.ts'),
-        "import { createInertiaApp } from '@inertiajs/vue3';\n\ncreateInertiaApp({});\n"
-    );
+    file_put_contents(resource_path('js/app.ts'), <<<'TS'
+        import { createInertiaApp } from '@inertiajs/vue3';
+
+        createInertiaApp({});
+        TS);
 
     $this->artisan('puff:install', ['--stack' => 'vue', '--no-wire' => true, '--force' => true])
         ->assertSuccessful();
@@ -159,10 +164,15 @@ it('warns when files already exist and --force is not used', function () {
 });
 
 it('adds puff:publish to an existing post-update-cmd', function () {
-    file_put_contents(
-        base_path('composer.json'),
-        "{\n    \"scripts\": {\n        \"post-update-cmd\": [\n            \"@php artisan package:discover --ansi\"\n        ]\n    }\n}\n"
-    );
+    file_put_contents(base_path('composer.json'), <<<'JSON'
+        {
+            "scripts": {
+                "post-update-cmd": [
+                    "@php artisan package:discover --ansi"
+                ]
+            }
+        }
+        JSON);
 
     $this->artisan('puff:install', ['--stack' => 'vue', '--no-wire' => true, '--force' => true])
         ->assertSuccessful();
@@ -175,7 +185,17 @@ it('adds puff:publish to an existing post-update-cmd', function () {
 
 it('inserts the script without reformatting the rest of composer.json', function () {
     // 2-space top level, 4-space scripts, 6-space entries, plus an empty object.
-    $original = "{\n  \"name\": \"acme/app\",\n  \"extra\": {},\n  \"scripts\": {\n    \"post-update-cmd\": [\n      \"@php artisan package:discover --ansi\"\n    ]\n  }\n}\n";
+    $original = <<<'JSON'
+        {
+          "name": "acme/app",
+          "extra": {},
+          "scripts": {
+            "post-update-cmd": [
+              "@php artisan package:discover --ansi"
+            ]
+          }
+        }
+        JSON;
     file_put_contents(base_path('composer.json'), $original);
 
     $this->artisan('puff:install', ['--stack' => 'vue', '--no-wire' => true, '--force' => true])
@@ -184,17 +204,22 @@ it('inserts the script without reformatting the rest of composer.json', function
     $updated = (string) file_get_contents(base_path('composer.json'));
 
     expect($updated)
-        ->toContain("  \"name\": \"acme/app\",")          // untouched 2-space indent
-        ->toContain("  \"extra\": {},")                    // empty object preserved, not turned into []
-        ->toContain("      \"@php artisan package:discover --ansi\"") // sibling kept verbatim
-        ->toContain("      \"@php artisan puff:publish --ansi\",");   // new line matches the 6-space indent
+        ->toContain('  "name": "acme/app",')          // untouched 2-space indent
+        ->toContain('  "extra": {},')                    // empty object preserved, not turned into []
+        ->toContain('      "@php artisan package:discover --ansi"') // sibling kept verbatim
+        ->toContain('      "@php artisan puff:publish --ansi",');   // new line matches the 6-space indent
 });
 
 it('does not duplicate the composer script when run twice', function () {
-    file_put_contents(
-        base_path('composer.json'),
-        "{\n    \"scripts\": {\n        \"post-update-cmd\": [\n            \"@php artisan package:discover --ansi\"\n        ]\n    }\n}\n"
-    );
+    file_put_contents(base_path('composer.json'), <<<'JSON'
+        {
+            "scripts": {
+                "post-update-cmd": [
+                    "@php artisan package:discover --ansi"
+                ]
+            }
+        }
+        JSON);
 
     $this->artisan('puff:install', ['--stack' => 'vue', '--no-wire' => true, '--force' => true])->assertSuccessful();
     $this->artisan('puff:install', ['--stack' => 'vue', '--no-wire' => true, '--force' => true])->assertSuccessful();
@@ -205,7 +230,11 @@ it('does not duplicate the composer script when run twice', function () {
 });
 
 it('leaves composer.json unchanged when there is no post-update-cmd', function () {
-    $original = "{\n    \"name\": \"acme/app\"\n}\n";
+    $original = <<<'JSON'
+        {
+            "name": "acme/app"
+        }
+        JSON;
     file_put_contents(base_path('composer.json'), $original);
 
     $this->artisan('puff:install', ['--stack' => 'vue', '--no-wire' => true, '--force' => true])
@@ -215,7 +244,15 @@ it('leaves composer.json unchanged when there is no post-update-cmd', function (
 });
 
 it('leaves composer.json untouched with --no-scripts', function () {
-    $original = "{\n    \"scripts\": {\n        \"post-update-cmd\": [\n            \"@php artisan package:discover --ansi\"\n        ]\n    }\n}\n";
+    $original = <<<'JSON'
+        {
+            "scripts": {
+                "post-update-cmd": [
+                    "@php artisan package:discover --ansi"
+                ]
+            }
+        }
+        JSON;
     file_put_contents(base_path('composer.json'), $original);
 
     $this->artisan('puff:install', ['--stack' => 'vue', '--no-wire' => true, '--no-scripts' => true, '--force' => true])
