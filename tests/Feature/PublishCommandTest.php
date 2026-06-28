@@ -18,7 +18,7 @@ it('succeeds without publishing when puff is not installed', function () {
 });
 
 it('re-publishes the installed stub, overwriting local drift', function () {
-    $this->artisan('puff:install', ['--stack' => 'vue', '--no-wire' => true, '--force' => true])
+    $this->artisan('puff:install', ['--stack' => 'vue', '--no-wire' => true, '--no-scripts' => true, '--force' => true])
         ->assertSuccessful();
 
     file_put_contents(resource_path('js/laravel-puff/puff.ts'), 'stale');
@@ -29,7 +29,7 @@ it('re-publishes the installed stub, overwriting local drift', function () {
 });
 
 it('re-publishes the react adapter when react is installed', function () {
-    $this->artisan('puff:install', ['--stack' => 'react', '--no-wire' => true, '--force' => true])
+    $this->artisan('puff:install', ['--stack' => 'react', '--no-wire' => true, '--no-scripts' => true, '--force' => true])
         ->assertSuccessful();
 
     file_put_contents(resource_path('js/laravel-puff/usePuff.ts'), "import { useEffect } from 'react';");
@@ -43,7 +43,7 @@ it('re-publishes the react adapter when react is installed', function () {
 });
 
 it('does not publish the config', function () {
-    $this->artisan('puff:install', ['--stack' => 'vue', '--no-wire' => true, '--force' => true])
+    $this->artisan('puff:install', ['--stack' => 'vue', '--no-wire' => true, '--no-scripts' => true, '--force' => true])
         ->assertSuccessful();
 
     @unlink(config_path('puff.php'));

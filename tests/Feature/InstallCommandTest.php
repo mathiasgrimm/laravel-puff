@@ -4,7 +4,18 @@ use MathiasGrimm\Puff\Tests\TestCase;
 
 uses(TestCase::class);
 
+beforeEach(function () {
+    $this->composerPath = base_path('composer.json');
+    $this->composerBackup = is_file($this->composerPath)
+        ? file_get_contents($this->composerPath)
+        : null;
+});
+
 afterEach(function () {
+    if ($this->composerBackup !== null) {
+        file_put_contents($this->composerPath, $this->composerBackup);
+    }
+
     @unlink(config_path('puff.php'));
     @unlink(resource_path('js/laravel-puff/puff.ts'));
     @unlink(resource_path('js/laravel-puff/usePuff.ts'));
@@ -116,4 +127,70 @@ it('skips wiring when --no-wire is passed', function () {
         ->assertSuccessful();
 
     expect(file_get_contents(resource_path('js/app.ts')))->not->toContain('startPuff');
+});
+
+it('adds puff:publish to an existing post-update-cmd', function () {
+    file_put_contents(
+        base_path('composer.json'),
+        "{\n    \"scripts\": {\n        \"post-update-cmd\": [\n            \"@php artisan package:discover --ansi\"\n        ]\n    }\n}\n"
+    );
+
+    $this->artisan('puff:install', ['--stack' => 'vue', '--no-wire' => true, '--force' => true])
+        ->assertSuccessful();
+
+    $cmds = json_decode((string) file_get_contents(base_path('composer.json')), true)['scripts']['post-update-cmd'];
+
+    expect($cmds)->toContain('@php artisan package:discover --ansi')
+        ->and($cmds)->toContain('@php artisan puff:publish --ansi');
+});
+
+it('inserts the script without reformatting the rest of composer.json', function () {
+    // 2-space top level, 4-space scripts, 6-space entries, plus an empty object.
+    $original = "{\n  \"name\": \"acme/app\",\n  \"extra\": {},\n  \"scripts\": {\n    \"post-update-cmd\": [\n      \"@php artisan package:discover --ansi\"\n    ]\n  }\n}\n";
+    file_put_contents(base_path('composer.json'), $original);
+
+    $this->artisan('puff:install', ['--stack' => 'vue', '--no-wire' => true, '--force' => true])
+        ->assertSuccessful();
+
+    $updated = (string) file_get_contents(base_path('composer.json'));
+
+    expect($updated)
+        ->toContain("  \"name\": \"acme/app\",")          // untouched 2-space indent
+        ->toContain("  \"extra\": {},")                    // empty object preserved, not turned into []
+        ->toContain("      \"@php artisan package:discover --ansi\"") // sibling kept verbatim
+        ->toContain("      \"@php artisan puff:publish --ansi\",");   // new line matches the 6-space indent
+});
+
+it('does not duplicate the composer script when run twice', function () {
+    file_put_contents(
+        base_path('composer.json'),
+        "{\n    \"scripts\": {\n        \"post-update-cmd\": [\n            \"@php artisan package:discover --ansi\"\n        ]\n    }\n}\n"
+    );
+
+    $this->artisan('puff:install', ['--stack' => 'vue', '--no-wire' => true, '--force' => true])->assertSuccessful();
+    $this->artisan('puff:install', ['--stack' => 'vue', '--no-wire' => true, '--force' => true])->assertSuccessful();
+
+    $cmds = json_decode((string) file_get_contents(base_path('composer.json')), true)['scripts']['post-update-cmd'];
+
+    expect(count(array_keys($cmds, '@php artisan puff:publish --ansi', true)))->toBe(1);
+});
+
+it('leaves composer.json unchanged when there is no post-update-cmd', function () {
+    $original = "{\n    \"name\": \"acme/app\"\n}\n";
+    file_put_contents(base_path('composer.json'), $original);
+
+    $this->artisan('puff:install', ['--stack' => 'vue', '--no-wire' => true, '--force' => true])
+        ->assertSuccessful();
+
+    expect(file_get_contents(base_path('composer.json')))->toBe($original);
+});
+
+it('leaves composer.json untouched with --no-scripts', function () {
+    $original = "{\n    \"scripts\": {\n        \"post-update-cmd\": [\n            \"@php artisan package:discover --ansi\"\n        ]\n    }\n}\n";
+    file_put_contents(base_path('composer.json'), $original);
+
+    $this->artisan('puff:install', ['--stack' => 'vue', '--no-wire' => true, '--no-scripts' => true, '--force' => true])
+        ->assertSuccessful();
+
+    expect(file_get_contents(base_path('composer.json')))->toBe($original);
 });

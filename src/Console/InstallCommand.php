@@ -16,6 +16,7 @@ class InstallCommand extends Command
         {--stack= : The frontend stack to install the keep-alive stub for (vue|react); auto-detected when omitted}
         {--entry= : Path (relative to the app root) of the JS entry file to wire startPuff() into}
         {--no-wire : Publish the stub but do not modify the entry file}
+        {--no-scripts : Do not add puff:publish to the app composer post-update-cmd}
         {--force : Overwrite any existing published files}';
 
     /**
@@ -63,12 +64,71 @@ class InstallCommand extends Command
             $this->wireStartPuff();
         }
 
+        if (! $this->option('no-scripts')) {
+            $this->registerComposerScript();
+        }
+
         $this->components->info(
             'Puff installed. Move the mouse or switch tabs and you should see a throttled '
             .'POST /puff on any page.'
         );
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Best-effort: add `puff:publish` to the app's composer `post-update-cmd`
+     * so the published stub is re-synced on every `composer update`, the way
+     * Telescope/Horizon/Nova keep their assets current.
+     *
+     * Inserts a single line into the existing post-update-cmd array via a string
+     * edit, so the rest of composer.json keeps its exact formatting. When there
+     * is no post-update-cmd array to extend, it prints the line to add by hand
+     * rather than risk reformatting (or corrupting) the file.
+     */
+    private function registerComposerScript(): void
+    {
+        $command = '@php artisan puff:publish --ansi';
+        $path = base_path('composer.json');
+
+        if (! is_file($path)) {
+            $this->manualScriptHint($command);
+
+            return;
+        }
+
+        $content = (string) file_get_contents($path);
+
+        if (str_contains($content, $command)) {
+            $this->components->info('puff:publish is already in composer post-update-cmd.');
+
+            return;
+        }
+
+        // Match a non-empty post-update-cmd array (the `"` requires a first
+        // entry) and capture the indentation of that entry, so the new line
+        // lines up with its siblings and nothing else in the file is touched.
+        if (preg_match('/"post-update-cmd"\s*:\s*\[\s*\n([ \t]*)"/', $content, $m, PREG_OFFSET_CAPTURE) !== 1) {
+            $this->manualScriptHint($command);
+
+            return;
+        }
+
+        $indent = $m[1][0];
+        $insertAt = (int) $m[1][1];
+        $entry = $indent.'"'.$command.'",'."\n";
+
+        file_put_contents($path, substr_replace($content, $entry, $insertAt, 0));
+
+        $this->components->info('Added puff:publish to composer post-update-cmd.');
+    }
+
+    private function manualScriptHint(string $command): void
+    {
+        $this->components->warn(
+            'Add "'.$command.'" to the post-update-cmd scripts in composer.json so the '
+            .'stub stays in sync on composer update (see the README).'
+        );
     }
 
     /**
