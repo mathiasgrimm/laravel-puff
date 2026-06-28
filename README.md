@@ -97,6 +97,15 @@ import { usePuff } from '@/laravel-puff/usePuff';
 usePuff();
 ```
 
+To restrict warming (e.g. authenticated users only), pass an `isEnabled`
+predicate:
+
+```ts
+import { usePage } from '@inertiajs/vue3';
+
+usePuff({ isEnabled: () => !!usePage().props.auth?.user });
+```
+
 ### React hook (opt-in)
 
 On React (e.g. the React starter kit), the published `usePuff` is a hook that
@@ -108,18 +117,10 @@ import { usePuff } from '@/laravel-puff/usePuff';
 usePuff();
 ```
 
-Both adapters accept the same options. To restrict warming (e.g. authenticated
-users only), pass an `isEnabled` predicate:
-
-```ts
-// Vue
-import { usePage } from '@inertiajs/vue3';
-
-startPuff({ isEnabled: () => !!usePage().props.auth?.user });
-```
+To restrict warming (e.g. authenticated users only), pass an `isEnabled`
+predicate:
 
 ```tsx
-// React
 import { usePage } from '@inertiajs/react';
 
 usePuff({ isEnabled: () => !!usePage().props.auth?.user });
