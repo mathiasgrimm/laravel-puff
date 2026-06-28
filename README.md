@@ -59,9 +59,8 @@ That's it. Move the mouse or switch back to the tab and you'll see a single
 
 The published JS (`resources/js/laravel-puff/`) is a copy, so `composer update`
 alone won't refresh it. Treat that folder as package-owned (don't edit it).
-`puff:install` already adds the following to your `composer.json` (the
-Telescope/Horizon/Nova approach for keeping assets in sync), so every update
-re-publishes the stub from the installed version:
+`puff:install` already adds the following to your `composer.json`, so every
+update re-publishes the stub from the installed version:
 
 ```json
 "scripts": {
