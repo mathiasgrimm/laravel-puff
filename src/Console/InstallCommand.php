@@ -226,16 +226,10 @@ class InstallCommand extends Command
             return;
         }
 
-        $import = "import { startPuff } from '@/laravel-puff/puff';";
+        $module = '@/laravel-puff/puff';
+        $import = "import { startPuff } from '{$module}';";
 
-        // Place the import after the last existing import, else at the top.
-        if (preg_match_all('/^\s*import\b.*?;\s*$/m', $content, $imports, PREG_OFFSET_CAPTURE) >= 1) {
-            $last = end($imports[0]);
-            $insertAt = $last[1] + strlen($last[0]);
-            $content = substr_replace($content, "\n".$import, $insertAt, 0);
-        } else {
-            $content = $import."\n".$content;
-        }
+        $content = $this->insertImport($content, $import, $module);
 
         // Call it at module scope, after the app has been created.
         $content = rtrim($content, "\n")
@@ -244,6 +238,50 @@ class InstallCommand extends Command
         file_put_contents($entry, $content);
 
         $this->components->info("Wired startPuff() into {$relative}.");
+    }
+
+    /**
+     * Insert an import line, kept sorted among the existing `@/` alias imports
+     * so it satisfies eslint import/order (which is what the starter kits use)
+     * instead of landing after the last import. Falls back to after the last
+     * import of any kind, then to the top of the file.
+     */
+    private function insertImport(string $content, string $import, string $module): string
+    {
+        if (preg_match_all('/^[ \t]*import\b[^;\n]*;[ \t]*$/m', $content, $all, PREG_OFFSET_CAPTURE) < 1) {
+            return $import."\n".$content;
+        }
+
+        $insertBefore = null;
+        $insertAfterEnd = null;
+
+        foreach ($all[0] as [$line, $offset]) {
+            if (preg_match('/from\s*[\'"](@\/[^\'"]+)[\'"]/', $line, $m) !== 1) {
+                continue;
+            }
+
+            // First alias import that sorts after ours: slot in right before it.
+            if (strcmp($m[1], $module) > 0) {
+                $insertBefore = $offset;
+                break;
+            }
+
+            // Otherwise remember the end of the alias block seen so far.
+            $insertAfterEnd = $offset + strlen($line);
+        }
+
+        if ($insertBefore !== null) {
+            return substr_replace($content, $import."\n", $insertBefore, 0);
+        }
+
+        if ($insertAfterEnd !== null) {
+            return substr_replace($content, "\n".$import, $insertAfterEnd, 0);
+        }
+
+        // No alias imports at all: fall back to after the last import.
+        $last = end($all[0]);
+
+        return substr_replace($content, "\n".$import, $last[1] + strlen($last[0]), 0);
     }
 
     /**
