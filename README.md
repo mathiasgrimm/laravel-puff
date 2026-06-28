@@ -1,6 +1,6 @@
 # laravel-puff
 
-> Keep your scale-to-zero Laravel app warm.
+> On-demand warming for scale-to-zero Laravel apps - no cold start when it counts.
 
 Laravel Cloud's scale-to-zero is spectacular: it parks your environment when idle
 and wakes it in ~500ms. **laravel-puff** makes it even better. When a visitor
