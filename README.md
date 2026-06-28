@@ -32,19 +32,48 @@ composer require mathiasgrimm/laravel-puff
 php artisan puff:install
 ```
 
-`puff:install` does two things:
+`puff:install` does three things:
 
-1. Publishes the config and the keep-alive JS (the framework-agnostic core +
-   a Vue composable) into `resources/js/laravel-puff/`.
-2. Wires a global `startPuff()` call into your JS entry (`resources/js/app.ts`),
-   so warming runs on every page out of the box.
+1. Publishes the config and the warm-up JS (the framework-agnostic core +
+   a framework adapter) into `resources/js/laravel-puff/`.
+2. Wires a global `startPuff()` call into your JS entry (`resources/js/app.ts`
+   or `resources/js/app.tsx`), so warming runs on every page out of the box.
+3. Adds `puff:publish` to your `composer.json` `post-update-cmd` (a one-line
+   string edit that leaves the rest of the file untouched) so the stub re-syncs
+   with the installed package version on every `composer update`. If you have no
+   `post-update-cmd` yet, it prints the line to add instead of reformatting.
 
-Flags: `--no-wire` to skip step 2, `--entry=path/to/app.ts` to target a different
-entry file, `--force` to overwrite published files, `--stack=vue` (default; other
-stacks coming soon).
+The stack is auto-detected (Vue or React) from your entry file and
+`package.json`, so the Vue and React starter kits both work with a bare
+`php artisan puff:install`. If it can't tell, the command stops and asks you to
+pass `--stack=vue` or `--stack=react` rather than guessing.
+
+Flags: `--no-wire` to skip step 2, `--no-scripts` to skip step 3,
+`--entry=path/to/app.tsx` to target a different entry file, `--force` to
+overwrite published files, `--stack=vue|react` to override auto-detection.
 
 That's it. Move the mouse or switch back to the tab and you'll see a single
 `POST /puff` → `204`, throttled to at most one per 30 seconds.
+
+### Keeping the stub up to date
+
+The published JS (`resources/js/laravel-puff/`) is a copy, so `composer update`
+alone won't refresh it. Treat that folder as package-owned (don't edit it).
+`puff:install` already adds the following to your `composer.json`, so every
+update re-publishes the stub from the installed version:
+
+```json
+"scripts": {
+    "post-update-cmd": [
+        "@php artisan puff:publish --ansi"
+    ]
+}
+```
+
+If you installed with `--no-scripts`, add it yourself. `puff:publish`
+force-republishes the core + the adapter for whichever stack you installed (it
+never touches `config/puff.php`, which stays yours). You can also run it by hand
+any time: `php artisan puff:publish`.
 
 ### Wiring it yourself
 
@@ -68,13 +97,33 @@ import { usePuff } from '@/laravel-puff/usePuff';
 usePuff();
 ```
 
-Both accept the same options. To restrict warming (e.g. authenticated users
-only), pass an `isEnabled` predicate:
+To restrict warming (e.g. authenticated users only), pass an `isEnabled`
+predicate:
 
 ```ts
 import { usePage } from '@inertiajs/vue3';
 
-startPuff({ isEnabled: () => !!usePage().props.auth?.user });
+usePuff({ isEnabled: () => !!usePage().props.auth?.user });
+```
+
+### React hook (opt-in)
+
+On React (e.g. the React starter kit), the published `usePuff` is a hook that
+starts warming on mount and cleans up on unmount. Call it once in a layout:
+
+```tsx
+import { usePuff } from '@/laravel-puff/usePuff';
+
+usePuff();
+```
+
+To restrict warming (e.g. authenticated users only), pass an `isEnabled`
+predicate:
+
+```tsx
+import { usePage } from '@inertiajs/react';
+
+usePuff({ isEnabled: () => !!usePage().props.auth?.user });
 ```
 
 ## Configuration

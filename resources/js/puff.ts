@@ -32,13 +32,19 @@ function readCookie(name: string): string | null {
  *
  * When the user shows intent to act (moving the mouse, typing, scrolling,
  * touching the screen, or returning to the tab), fire a fire-and-forget request
- * to the keep-alive endpoint, throttled to at most one request per `intervalMs`.
+ * to the warm-up endpoint, throttled to at most one request per `intervalMs`.
  * Every signal funnels through the same throttle, so adding signals widens
  * coverage without ever raising the request rate.
  *
  * Returns a `stop()` function that detaches every listener.
  */
 export function startPuff(options: PuffOptions = {}): () => void {
+    // No-op on the server (SSR / Inertia SSR). There is no user to warm for and
+    // no `window`/`document` to attach to, so bail out with a no-op stop().
+    if (typeof window === 'undefined') {
+        return (): void => {};
+    }
+
     const url = options.url ?? '/puff';
     const intervalMs = options.intervalMs ?? 30_000;
     const events = options.events ?? DEFAULT_EVENTS;
