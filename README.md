@@ -1,3 +1,7 @@
+<p align="center">
+    <img src="https://raw.githubusercontent.com/mathiasgrimm/laravel-puff/main/art/banner.png" alt="Laravel Puff" width="100%">
+</p>
+
 # Laravel Puff
 
 > On-demand warming for scale-to-zero Laravel apps. No cold start when it counts.
