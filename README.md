@@ -13,6 +13,12 @@
     <a href="https://packagist.org/packages/mathiasgrimm/laravel-puff"><img src="https://img.shields.io/packagist/l/mathiasgrimm/laravel-puff.svg?style=flat-square" alt="License"></a>
 </p>
 
+> [!NOTE]
+> This is an independent, community package. It is not an official or
+> first-party Laravel package, and is not affiliated with, endorsed by, or
+> sponsored by Laravel or Laravel Cloud. "Laravel" is a trademark of its
+> respective owner.
+
 Laravel Cloud's scale-to-zero is spectacular: it parks your environment when idle
 and wakes it in ~500ms. **Laravel Puff** makes it even better. When a visitor
 shows *intent* to act (moving the mouse, typing, scrolling, or returning to the
