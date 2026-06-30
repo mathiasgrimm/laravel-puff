@@ -1,22 +1,36 @@
-# laravel-puff
+# Laravel Puff
 
-> On-demand warming for scale-to-zero Laravel apps - no cold start when it counts.
+> On-demand warming for scale-to-zero Laravel apps. No cold start when it counts.
+
+<p align="left">
+    <a href="https://packagist.org/packages/mathiasgrimm/laravel-puff"><img src="https://img.shields.io/packagist/v/mathiasgrimm/laravel-puff.svg?style=flat-square" alt="Latest Version on Packagist"></a>
+    <a href="https://github.com/mathiasgrimm/laravel-puff/actions/workflows/tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/mathiasgrimm/laravel-puff/tests.yml?branch=main&label=tests&style=flat-square" alt="Tests"></a>
+    <a href="https://packagist.org/packages/mathiasgrimm/laravel-puff"><img src="https://img.shields.io/packagist/dt/mathiasgrimm/laravel-puff.svg?style=flat-square" alt="Total Downloads"></a>
+    <a href="https://packagist.org/packages/mathiasgrimm/laravel-puff"><img src="https://img.shields.io/packagist/l/mathiasgrimm/laravel-puff.svg?style=flat-square" alt="License"></a>
+</p>
 
 Laravel Cloud's scale-to-zero is spectacular: it parks your environment when idle
-and wakes it in ~500ms. **laravel-puff** makes it even better. When a visitor
+and wakes it in ~500ms. **Laravel Puff** makes it even better. When a visitor
 shows *intent* to act (moving the mouse, typing, scrolling, or returning to the
-tab), the browser fires a lightweight, throttled `POST /puff` that warms your
-database and Redis *ahead of* the real request, so the cold start is already paid
-for by the time they click.
+tab), the browser fires a lightweight, throttled `POST /puff` that wakes the
+environment itself and its related resources, your database and Redis,
+*ahead of* the real request, so the cold start is already paid for by the time
+they click.
 
 It is **not** a poller. A heartbeat that pings on a timer would keep the
-environment awake forever and defeat scale-to-zero. laravel-puff only fires on
+environment awake forever and defeat scale-to-zero. Laravel Puff only fires on
 genuine human activity, so an idle app still sleeps (and stops billing) the
 moment everyone leaves.
 
-- Tiny, framework-agnostic JS core (no axios, no Wayfinder, no Inertia coupling).
-- Throttled (one request per 60s by default), public by default, runs everywhere.
-- Ships Vue and React adapters today; Svelte and Livewire/Blade are additive.
+## Features
+
+- **Activity-driven, not timed.** Warms on real intent (mouse, keyboard, scroll,
+  touch, tab focus), so idle apps still scale to zero.
+- **Tiny, framework-agnostic core.** No axios, no Wayfinder, no Inertia coupling.
+- **Throttled and public by default.** One request per 60s, runs everywhere out
+  of the box.
+- **Vue and React adapters included.** Svelte and Livewire/Blade are additive.
+- **Zero-config CSRF.** Reads Laravel's `XSRF-TOKEN` cookie automatically.
 
 ## Requirements
 
@@ -72,6 +86,8 @@ If you installed with `--no-scripts`, add it yourself. `puff:publish`
 force-republishes the core + the adapter for whichever stack you installed (it
 never touches `config/puff.php`, which stays yours). You can also run it by hand
 any time: `php artisan puff:publish`.
+
+## Usage
 
 ### Wiring it yourself
 
@@ -151,18 +167,18 @@ return [
 CSRF works out of the box: the core reads Laravel's `XSRF-TOKEN` cookie and sends
 it as the `X-XSRF-TOKEN` header, so no meta tag or extra setup is needed.
 
-## Frontend options
+### Frontend options
 
 `usePuff(options)` / `startPuff(options)` accept:
 
-| Option          | Default                                          | Description                                                     |
-| --------------- | ------------------------------------------------ | -------------------------------------------------------------- |
-| `url`           | `'/puff'`                                         | Endpoint to POST to                                            |
-| `intervalSeconds` | `60`                                            | Minimum gap between requests, also measured from page load   |
-| `events`        | `['mousemove','keydown','scroll','touchstart']`   | Activity events (on `window`) that trigger a warm             |
-| `method`        | `'POST'`                                           | HTTP method                                                   |
-| `warmOnVisible` | `true`                                            | Also warm when the user returns to the tab (`visibilitychange`) |
-| `isEnabled`     | always-on                                          | Return `false` to skip (e.g. for guests)                     |
+| Option            | Default                                          | Description                                                      |
+| ----------------- | ------------------------------------------------ | --------------------------------------------------------------- |
+| `url`             | `'/puff'`                                         | Endpoint to POST to                                             |
+| `intervalSeconds` | `60`                                             | Minimum gap between requests, also measured from page load      |
+| `events`          | `['mousemove','keydown','scroll','touchstart']`   | Activity events (on `window`) that trigger a warm               |
+| `method`          | `'POST'`                                           | HTTP method                                                     |
+| `warmOnVisible`   | `true`                                            | Also warm when the user returns to the tab (`visibilitychange`) |
+| `isEnabled`       | always-on                                          | Return `false` to skip (e.g. for guests)                       |
 
 The framework-agnostic core (`resources/js/laravel-puff/puff.ts`) exports
 `startPuff(options): () => void` and returns a `stop()` cleanup, if you want to
@@ -194,6 +210,22 @@ between puffs. When in doubt, match it to your scale-to-zero idle setting.
 ```bash
 composer test
 ```
+
+## Contributing
+
+Contributions are welcome. Please open an issue to discuss substantial changes
+before sending a pull request, and make sure `composer test` and
+`composer analyse` pass.
+
+## Security
+
+If you discover a security vulnerability, please email
+mathiasgrimm@gmail.com instead of using the issue tracker.
+
+## Credits
+
+- [Mathias Grimm](https://github.com/mathiasgrimm)
+- [All Contributors](https://github.com/mathiasgrimm/laravel-puff/contributors)
 
 ## License
 
