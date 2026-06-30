@@ -1,0 +1,51 @@
+<svg width="1200" height="360" viewBox="0 0 1200 360" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Laravel Puff">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="360" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B1120"/>
+      <stop offset="1" stop-color="#1B2436"/>
+    </linearGradient>
+    <linearGradient id="warm" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FF6B4A"/>
+      <stop offset="1" stop-color="#FF2D20"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FF6B4A" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#FF6B4A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="360" rx="28" fill="url(#bg)"/>
+
+  <!-- icon -->
+  <g transform="translate(96 84)">
+    <circle cx="120" cy="100" r="120" fill="url(#glow)"/>
+
+    <!-- warm puff exhaling to the right -->
+    <g stroke="url(#warm)" stroke-width="10" stroke-linecap="round" fill="none">
+      <path d="M196 64 q22 -16 44 0 t44 0"/>
+      <path d="M206 100 q24 -16 48 0 t48 0"/>
+      <path d="M196 136 q22 -16 44 0 t44 0"/>
+    </g>
+
+    <!-- cloud -->
+    <g fill="#F8FAFC">
+      <circle cx="78" cy="104" r="44"/>
+      <circle cx="128" cy="82" r="56"/>
+      <circle cx="172" cy="108" r="38"/>
+      <rect x="42" y="108" width="150" height="48" rx="24"/>
+    </g>
+  </g>
+
+  <!-- wordmark -->
+  <text x="446" y="178" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="78" font-weight="700" letter-spacing="-1">
+    <tspan fill="#F8FAFC">Laravel</tspan><tspan dx="26" fill="url(#warm)">Puff</tspan>
+  </text>
+
+  <text x="448" y="226" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="26" font-weight="400" fill="#94A3B8">
+    On-demand warming for scale-to-zero Laravel apps
+  </text>
+
+  <text x="448" y="266" font-family="'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="20" font-weight="500" fill="#64748B" letter-spacing="0.5">
+    No cold start when it counts
+  </text>
+</svg>
