@@ -1,0 +1,27 @@
+name: Glimpse
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check-images:
+    runs-on: ubuntu-latest
+    env:
+      GLIMPSE_TOKEN: ${{ secrets.GLIMPSE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Install glimpse
+        run: |
+          composer global require --no-interaction --no-progress mathiasgrimm/glimpse-cli
+          composer global config bin-dir --absolute --quiet >> "$GITHUB_PATH"
+      - name: Check images
+        if: env.GLIMPSE_TOKEN != ''
+        run: glimpse check .
+      - name: Skipped (no token)
+        if: env.GLIMPSE_TOKEN == ''
+        run: echo "::warning::GLIMPSE_TOKEN is not available (fork PR, or the secret is not set); image check skipped."
